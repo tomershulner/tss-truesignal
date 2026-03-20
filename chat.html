@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ContextGuard Chat</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Exo+2:wght@400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Exo 2', sans-serif;
+  background: #080b14;
+  color: #e0e6f0;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(0,229,255,.012) 3px, rgba(0,229,255,.012) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── LOGIN ── */
+#login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 48px 40px;
+  background: #10131e;
+  border: 1px solid #1e2840;
+  border-radius: 8px;
+  width: min(400px, 92vw);
+}
+
+.logo-big {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+.logo-big .cx { color: #00e5ff; }
+
+.game-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #3a4a70;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: -16px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+.login-form label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #4a6080;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.quick-names {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.qn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  padding: 5px 10px;
+  background: #080b14;
+  border: 1px solid #1e2840;
+  border-radius: 3px;
+  color: #4a6080;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.qn:hover { border-color: #00e5ff; color: #00e5ff; }
+
+#name-input {
+  width: 100%;
+  background: #080b14;
+  border: 1px solid #1e2840;
+  border-radius: 4px;
+  padding: 12px 14px;
+  color: #e0e6f0;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+#name-input:focus { border-color: #00e5ff; }
+#name-input::placeholder { color: #2a3450; }
+
+.join-btn {
+  width: 100%;
+  background: #00e5ff;
+  color: #080b14;
+  border: none;
+  border-radius: 4px;
+  padding: 13px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.join-btn:hover  { opacity: 0.85; }
+.join-btn:active { transform: scale(0.98); }
+.join-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-8px)} 40%{transform:translateX(8px)}
+  60%{transform:translateX(-5px)} 80%{transform:translateX(5px)}
+}
+
+/* ── LOBBY SELECT ── */
+#lobby-select {
+  display: none;
+  flex-direction: column;
+  width: min(680px, 100vw);
+  height: 100dvh;
+}
+
+.lobby-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #10131e;
+  border: 1px solid #1e2840;
+  border-radius: 6px;
+  padding: 16px 20px;
+  transition: border-color 0.15s;
+}
+.lobby-card:hover { border-color: #2a3a60; }
+.lobby-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.lobby-status {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #4a6080;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.lobby-join-btn {
+  background: #00e5ff;
+  color: #080b14;
+  border: none;
+  border-radius: 4px;
+  padding: 9px 20px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+.lobby-join-btn:hover   { opacity: 0.85; }
+.lobby-join-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ── WAITING ROOM ── */
+#waiting-room {
+  display: none;
+  flex-direction: column;
+  width: min(680px, 100vw);
+  height: 100dvh;
+}
+
+.wr-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#wr-count {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 14px;
+  color: #00e5ff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.wr-player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+}
+
+/* ── CHAT ── */
+#chat {
+  display: none;
+  flex-direction: column;
+  width: min(680px, 100vw);
+  height: 100dvh;
+}
+
+.chat-top {
+  background: #10131e;
+  border-bottom: 1px solid #1a2035;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.chat-logo {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.chat-logo .cx { color: #00e5ff; }
+
+.me-pill {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  border: 1px solid #1e2840;
+  border-radius: 3px;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.me-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #00e096;
+  animation: blink 1.4s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+#session-timer-bar {
+  background: #10131e;
+  border-bottom: 1px solid #1a2035;
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+#session-timer-bar span:first-child {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #3a4a70;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+#session-timer {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  color: #00e5ff;
+}
+
+#feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+}
+#feed::-webkit-scrollbar { width: 4px; }
+#feed::-webkit-scrollbar-thumb { background: #1e2840; border-radius: 2px; }
+
+.msg {
+  display: flex;
+  gap: 10px;
+  animation: fadeUp 0.2s ease;
+}
+.msg.me { flex-direction: row-reverse; }
+
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.av {
+  width: 34px; height: 34px;
+  border-radius: 4px;
+  border: 1px solid;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px; font-weight: 700;
+  flex-shrink: 0;
+}
+.bubble-col {
+  display: flex; flex-direction: column;
+  gap: 3px; max-width: 72%;
+}
+.msg.me .bubble-col { align-items: flex-end; }
+
+.uname {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+}
+.bubble {
+  background: #10131e;
+  border: 1px solid #1a2035;
+  border-radius: 4px;
+  padding: 9px 13px;
+  font-size: 15px;
+  line-height: 1.5;
+  word-break: break-word;
+  color: #d8e0f0;
+}
+.msg.me .bubble {
+  background: #0d1525;
+  border-color: #1e2f50;
+}
+
+.blocked-notice {
+  align-self: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  color: #ff3d71;
+  border: 1px solid rgba(255,61,113,0.3);
+  background: rgba(255,61,113,0.07);
+  border-radius: 3px;
+  padding: 6px 20px;
+  animation: fadeUp 0.2s ease;
+}
+
+.input-bar {
+  background: #10131e;
+  border-top: 1px solid #1a2035;
+  padding: 14px 16px;
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+#chat-input {
+  flex: 1;
+  background: #080b14;
+  border: 1px solid #1e2840;
+  border-radius: 4px;
+  padding: 11px 14px;
+  color: #e0e6f0;
+  font-family: 'Exo 2', sans-serif;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+#chat-input:focus { border-color: #00e5ff; }
+#chat-input::placeholder { color: #2a3450; }
+
+.send-btn {
+  background: #00e5ff;
+  color: #080b14;
+  border: none;
+  border-radius: 4px;
+  padding: 11px 22px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px; font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  flex-shrink: 0;
+}
+.send-btn:hover  { opacity: 0.85; }
+.send-btn:active { transform: scale(0.97); }
+
+/* ── EMOJI ── */
+.emoji-btn {
+  background: transparent;
+  border: 1px solid #1e2840;
+  border-radius: 4px;
+  width: 42px;
+  font-size: 18px;
+  cursor: pointer;
+  color: #e0e6f0;
+  transition: border-color 0.15s, background 0.15s;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.emoji-btn:hover { border-color: #00e5ff; background: #0d1525; }
+.emoji-btn.open  { border-color: #00e5ff; background: #0d1525; }
+
+#emoji-panel {
+  display: none;
+  background: #10131e;
+  border-top: 1px solid #1a2035;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+#emoji-panel.visible { display: block; }
+
+.emoji-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #1a2035;
+  padding: 0 12px;
+}
+.etab {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: #3a4a70;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.etab:hover { color: #8090b0; }
+.etab.active { color: #00e5ff; border-bottom-color: #00e5ff; }
+
+.emoji-grid {
+  display: none;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 10px 12px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+.emoji-grid.active { display: flex; }
+.emoji-grid::-webkit-scrollbar { width: 3px; }
+.emoji-grid::-webkit-scrollbar-thumb { background: #1e2840; }
+
+.ep {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.12s, transform 0.1s;
+}
+.ep:hover { background: #1a2240; transform: scale(1.15); }
+.ep:active { transform: scale(0.95); }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="logo-big"><span class="cx">CONTEXT</span>GUARD</div>
+  <div class="game-label">// Fortnite EU · Lobby Chat</div>
+  <div class="login-form">
+    <label>Pick your username</label>
+    <div class="quick-names">
+      <div class="qn" onclick="pick('xBlaze_99')">xBlaze_99</div>
+      <div class="qn" onclick="pick('ShadowRift')">ShadowRift</div>
+      <div class="qn" onclick="pick('NightCrawl3r')">NightCrawl3r</div>
+      <div class="qn" onclick="pick('dark4ce')">dark4ce</div>
+      <div class="qn" onclick="pick('Sp33dRun')">Sp33dRun</div>
+    </div>
+    <input id="name-input" placeholder="or type your own…" maxlength="20"
+           onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="join-btn" onclick="doLogin()">JOIN LOBBY</button>
+  </div>
+</div>
+
+<!-- LOBBY SELECT -->
+<div id="lobby-select">
+  <div class="chat-top">
+    <div class="chat-logo"><span class="cx">CG</span> SELECT LOBBY</div>
+    <div class="me-pill">
+      <div class="me-dot"></div>
+      <span id="ls-tag">—</span>
+    </div>
+  </div>
+  <div id="lobby-cards" style="padding:24px 16px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;flex:1;"></div>
+</div>
+
+<!-- WAITING ROOM -->
+<div id="waiting-room">
+  <div class="chat-top">
+    <div class="chat-logo"><span class="cx">CG</span> WAITING</div>
+    <div class="me-pill">
+      <div class="me-dot"></div>
+      <span id="wr-tag">—</span>
+    </div>
+  </div>
+  <div class="wr-body">
+    <div id="wr-count">0/5 players</div>
+    <div id="wr-players"></div>
+    <button class="join-btn" onclick="leaveLobby()" style="margin-top:8px;">LEAVE LOBBY</button>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div id="chat">
+  <div class="chat-top">
+    <div class="chat-logo"><span class="cx">CG</span> LOBBY CHAT</div>
+    <div class="me-pill">
+      <div class="me-dot"></div>
+      <span id="my-tag">—</span>
+    </div>
+  </div>
+
+  <div id="session-timer-bar">
+    <span>Session</span>
+    <span id="session-timer">30s</span>
+  </div>
+
+  <div id="feed"></div>
+
+  <div id="emoji-panel">
+    <div class="emoji-tabs">
+      <div class="etab active" onclick="switchTab('gaming')">Gaming</div>
+      <div class="etab" onclick="switchTab('faces')">Faces</div>
+      <div class="etab" onclick="switchTab('hands')">Hands</div>
+      <div class="etab" onclick="switchTab('objects')">Objects</div>
+      <div class="etab" onclick="switchTab('symbols')">Symbols</div>
+      <div class="etab" onclick="switchTab('regular')">Regular</div>
+    </div>
+    <div id="tab-gaming"  class="emoji-grid active"></div>
+    <div id="tab-faces"   class="emoji-grid"></div>
+    <div id="tab-hands"   class="emoji-grid"></div>
+    <div id="tab-objects" class="emoji-grid"></div>
+    <div id="tab-symbols" class="emoji-grid"></div>
+    <div id="tab-regular" class="emoji-grid"></div>
+  </div>
+
+  <div id="caution-bar" style="display:none;background:#1a0a0a;border-top:1px solid rgba(255,61,113,0.4);padding:8px 16px;font-family:'Share Tech Mono',monospace;font-size:12px;color:#ff3d71;flex-shrink:0;">
+    ⚠ This message may be harmful — press Send again to confirm
+  </div>
+  <div class="input-bar">
+    <button class="emoji-btn" id="emoji-toggle" onclick="toggleEmoji()">😊</button>
+    <input id="chat-input" placeholder="Say something…" maxlength="200"
+           onkeydown="if(event.key==='Enter') sendMsg()"
+           oninput="if(harmfulPending){harmfulPending=false;dismissCaution();}">
+    <button class="send-btn" onclick="sendMsg()">SEND</button>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:8000';
+
+const COLORS = ['#00e5ff','#7c4dff','#00e096','#ffaa00','#ff6b9d','#ff7043'];
+function colorFor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+  return COLORS[Math.abs(h) % COLORS.length];
+}
+
+const RULES = [
+  /1[4-5]88/i,
+  /\b88\b/,
+  /🍉.*🔯|🔯.*🍉/,
+  /k[\*i]ll.*jew|gas.*jew|jew.*rat/i,
+  /🐸.*🤡/i,
+  /gas.*rat|k[\*i]ll.*rat/i,
+  /\b(n[i1]gg|f[a4]gg|k[i1]ke)\b/i,
+  /🖐️.*✋|✋.*🖐️/,
+];
+function isHarmful(text) {
+  return RULES.some(r => r.test(text));
+}
+
+const state = {
+  myName: null,
+  myColor: null,
+  myUserId: null,
+  currentLobbyId: null,
+  lobbyPlayers: {},
+  sessionId: null,
+  lastMessageId: 0,
+  lobbyPollTimer: null,
+  sessionPollTimer: null,
+  sessionTimer: null,
+};
+
+function show(screenId) {
+  ['login', 'lobby-select', 'waiting-room', 'chat'].forEach(id => {
+    const el = document.getElementById(id);
+    if (id === screenId) {
+      el.style.display = (id === 'chat' || id === 'lobby-select' || id === 'waiting-room') ? 'flex' : 'flex';
+    } else {
+      el.style.display = 'none';
+    }
+  });
+}
+
+async function apiFetch(url, opts = {}) {
+  const res = await fetch(API + url, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`HTTP ${res.status}: ${text}`);
+  }
+  return res.json();
+}
+
+function pick(name) {
+  document.getElementById('name-input').value = name;
+}
+
+async function doLogin() {
+  const raw = document.getElementById('name-input').value.trim();
+  if (!raw) {
+    const el = document.getElementById('name-input');
+    el.style.animation = 'none';
+    requestAnimationFrame(() => { el.style.animation = 'shake 0.35s ease'; });
+    return;
+  }
+
+  state.myName  = raw;
+  state.myColor = colorFor(raw);
+
+  try {
+    let userId = null;
+    try {
+      const existing = await apiFetch(`/api/v1/users/by-username/${encodeURIComponent(raw)}`);
+      userId = existing.user_id;
+    } catch (e) {
+      if (e.message.startsWith('HTTP 404')) {
+        const data = await apiFetch('/api/v1/users/bulk', {
+          method: 'POST',
+          body: JSON.stringify({ count: 1, display_names: [raw] }),
+        });
+        userId = data.users[0].user_id;
+      } else {
+        throw e;
+      }
+    }
+    state.myUserId = userId;
+  } catch (e) {
+    console.error('Login failed:', e);
+    alert('Could not connect to server. Is the backend running?');
+    return;
+  }
+
+  document.getElementById('my-tag').textContent  = state.myName;
+  document.getElementById('my-tag').style.color  = state.myColor;
+  document.getElementById('ls-tag').textContent  = state.myName;
+  document.getElementById('ls-tag').style.color  = state.myColor;
+  document.getElementById('wr-tag').textContent  = state.myName;
+  document.getElementById('wr-tag').style.color  = state.myColor;
+
+  apiFetch('/api/v1/lobbies/reset', { method: 'POST' }).catch(() => {});
+  show('lobby-select');
+  startLobbyListPolling();
+}
+
+// ── LOBBY SELECT ──
+
+function startLobbyListPolling() {
+  renderLobbyList();
+  state.lobbyPollTimer = setInterval(renderLobbyList, 2000);
+}
+
+async function renderLobbyList() {
+  try {
+    const lobbies = await apiFetch('/api/v1/lobbies');
+    const container = document.getElementById('lobby-cards');
+    container.innerHTML = '';
+    lobbies.forEach(lobby => {
+      const inGame = lobby.status === 'in_game';
+      const card = document.createElement('div');
+      card.className = 'lobby-card';
+      card.innerHTML = `
+        <div>
+          <div class="lobby-title">${lobby.name}</div>
+          <div class="lobby-status">${inGame ? '⚡ IN GAME' : `${lobby.player_count}/5 PLAYERS`}</div>
+        </div>
+        <button class="lobby-join-btn" onclick="joinLobby(${lobby.lobby_id})" ${inGame ? 'disabled' : ''}>
+          ${inGame ? 'IN PROGRESS' : 'JOIN'}
+        </button>`;
+      container.appendChild(card);
+    });
+  } catch (e) {
+    console.error('Failed to fetch lobbies:', e);
+  }
+}
+
+async function joinLobby(lobbyId) {
+  clearInterval(state.lobbyPollTimer);
+  state.lobbyPollTimer = null;
+
+  try {
+    const data = await apiFetch(`/api/v1/lobbies/${lobbyId}/join`, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: state.myUserId, display_name: state.myName }),
+    });
+    state.currentLobbyId = lobbyId;
+
+    if (data.status === 'in_game') {
+      startGame(data.session_id);
+    } else {
+      show('waiting-room');
+      startWaitingRoomPolling(lobbyId);
+    }
+  } catch (e) {
+    console.error('Failed to join lobby:', e);
+    alert(`Failed to join lobby: ${e.message}`);
+    show('lobby-select');
+    startLobbyListPolling();
+  }
+}
+
+// ── WAITING ROOM ──
+
+function startWaitingRoomPolling(lobbyId) {
+  pollWaitingRoom(lobbyId);
+  state.lobbyPollTimer = setInterval(() => pollWaitingRoom(lobbyId), 2000);
+}
+
+async function pollWaitingRoom(lobbyId) {
+  try {
+    const lobby = await apiFetch(`/api/v1/lobbies/${lobbyId}`);
+    document.getElementById('wr-count').textContent = `${lobby.player_count}/5 players`;
+
+    lobby.players.forEach(p => {
+      state.lobbyPlayers[p.user_id] = p.display_name;
+    });
+
+    const container = document.getElementById('wr-players');
+    container.innerHTML = '';
+    lobby.players.forEach(p => {
+      const color = colorFor(p.display_name);
+      const div = document.createElement('div');
+      div.className = 'wr-player';
+      div.innerHTML = `
+        <div class="av" style="width:28px;height:28px;font-size:11px;background:${color}22;color:${color};border-color:${color}44">
+          ${p.display_name.slice(0,2).toUpperCase()}
+        </div>
+        <span>${esc(p.display_name)}</span>`;
+      container.appendChild(div);
+    });
+
+    if (lobby.status === 'in_game') {
+      clearInterval(state.lobbyPollTimer);
+      state.lobbyPollTimer = null;
+      startGame(lobby.session_id);
+    }
+  } catch (e) {
+    console.error('Failed to poll waiting room:', e);
+  }
+}
+
+async function leaveLobby() {
+  clearInterval(state.lobbyPollTimer);
+  state.lobbyPollTimer = null;
+
+  try {
+    await apiFetch(`/api/v1/lobbies/${state.currentLobbyId}/leave`, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: state.myUserId }),
+    });
+  } catch (e) {
+    console.error('Leave lobby error:', e);
+  }
+
+  state.currentLobbyId = null;
+  show('lobby-select');
+  startLobbyListPolling();
+}
+
+// ── GAME SESSION ──
+
+function startGame(sessionId) {
+  state.sessionId = sessionId;
+  state.lastMessageId = 0;
+  document.getElementById('feed').innerHTML = '';
+  show('chat');
+  document.getElementById('chat-input').focus();
+
+  let remaining = 30;
+  document.getElementById('session-timer').textContent = remaining + 's';
+
+  state.sessionTimer = setInterval(() => {
+    remaining--;
+    document.getElementById('session-timer').textContent = remaining + 's';
+    if (remaining <= 0) {
+      clearInterval(state.sessionTimer);
+      state.sessionTimer = null;
+      endGame();
+    }
+  }, 1000);
+
+  startMessagePolling(sessionId);
+}
+
+function startMessagePolling(sessionId) {
+  state.sessionPollTimer = setInterval(async () => {
+    try {
+      const messages = await apiFetch(`/${sessionId}/messages?since_id=${state.lastMessageId}`);
+      messages.forEach(msg => {
+        if (msg.id > state.lastMessageId) state.lastMessageId = msg.id;
+        if (msg.user_id !== state.myUserId) {
+          const name  = state.lobbyPlayers[msg.user_id] || `User#${msg.user_id}`;
+          const color = colorFor(name);
+          renderMsg(name, msg.content, color, false, null);
+        }
+      });
+    } catch (e) {
+      console.error('Message poll failed:', e);
+    }
+  }, 2000);
+}
+
+async function endGame() {
+  clearInterval(state.sessionPollTimer);
+  clearInterval(state.sessionTimer);
+  state.sessionPollTimer = null;
+  state.sessionTimer     = null;
+
+  try {
+    await apiFetch(`/${state.sessionId}/close`, { method: 'POST' });
+  } catch (e) {
+    console.error('Close session error:', e);
+  }
+
+  try {
+    await apiFetch(`/api/v1/lobbies/${state.currentLobbyId}/leave`, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: state.myUserId }),
+    });
+  } catch (e) {
+    console.error('Leave lobby after game error:', e);
+  }
+
+  state.sessionId      = null;
+  state.currentLobbyId = null;
+  state.lastMessageId  = 0;
+  state.lobbyPlayers   = {};
+
+  show('lobby-select');
+  startLobbyListPolling();
+}
+
+// ── MESSAGES ──
+
+let localMsgCounter = 0;
+let harmfulPending = false;
+
+async function sendMsg() {
+  const input = document.getElementById('chat-input');
+  const text  = input.value.trim();
+  if (!text) return;
+
+  if (harmfulPending) {
+    // Second press — confirmed, proceed
+    harmfulPending = false;
+    dismissCaution();
+    input.value = '';
+  } else {
+    // Check client-side rules first
+    if (isHarmful(text)) {
+      harmfulPending = true;
+      showCaution();
+      return;
+    }
+    // Then check backend vibe score
+    try {
+      const check = await apiFetch(`/${state.sessionId}/check-message?content=${encodeURIComponent(text)}`);
+      if (check.vibe_score != null && check.vibe_score > 60) {
+        harmfulPending = true;
+        showCaution();
+        return;
+      }
+    } catch (e) { /* proceed if check fails */ }
+    input.value = '';
+  }
+
+  const localId = ++localMsgCounter;
+  renderMsg(state.myName, text, state.myColor, true, localId);
+
+  try {
+    const data = await apiFetch(`/${state.sessionId}/message`, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: state.myUserId, content: text }),
+    });
+
+    if (data.vibe_score != null) {
+      if (data.vibe_score > 80) {
+        const bubble = document.querySelector(`[data-msg-id="${localId}"] .bubble`);
+        if (bubble) bubble.textContent = '****';
+      } else if (data.vibe_score > 60) {
+        const wrap = document.querySelector(`[data-msg-id="${localId}"]`);
+        if (wrap) {
+          const warning = document.createElement('div');
+          warning.style.cssText = 'font-family:"Share Tech Mono",monospace;font-size:11px;color:#ffaa00;padding:2px 0 0 44px;';
+          warning.textContent = '⚠ This message may be harmful';
+          wrap.appendChild(warning);
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Send message failed:', e);
+  }
+}
+
+function renderMsg(name, text, color, isMe, localId) {
+  const feed = document.getElementById('feed');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg' + (isMe ? ' me' : '');
+  if (localId) wrap.dataset.msgId = localId;
+  wrap.innerHTML = `
+    <div class="av" style="background:${color}22;color:${color};border-color:${color}44">
+      ${name.slice(0,2).toUpperCase()}
+    </div>
+    <div class="bubble-col">
+      <span class="uname" style="color:${color}">${esc(name)}</span>
+      <div class="bubble">${esc(text)}</div>
+    </div>`;
+  feed.appendChild(wrap);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function showCaution() {
+  document.getElementById('caution-bar').style.display = 'block';
+}
+
+function dismissCaution() {
+  document.getElementById('caution-bar').style.display = 'none';
+}
+
+function esc(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ── EMOJI PANEL ── */
+const EMOJI_DATA = {
+  gaming:  ['🎮','🕹️','🏆','🥇','🎯','💥','⚡','🔥','💀','👾','🤖','🛡️','⚔️','🗡️','🏹','💣','🚀','🌀','🎲','🃏','🎰','🏅','🥊','🎖️','💫','✨','🌟','⭐','🔴','🟢'],
+  faces:   ['😀','😂','🤣','😅','😊','😍','🤩','😎','🥳','😏','😒','😤','😠','😡','🤬','😈','👿','💩','🤡','👻','💀','☠️','😱','😨','😰','😭','😢','🥺','😔','🤔'],
+  hands:   ['👋','🤚','✋','🖐️','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','🫶','🤲','🙏','💪','🖕'],
+  objects: ['💬','💭','🗨️','📢','📣','🔔','🔕','🎵','🎶','💯','❗','❓','‼️','⁉️','🔞','📵','⛔','🚫','❌','✅','☑️','🔲','🔳','▪️','▫️','🟥','🟧','🟨','🟩','🟦'],
+  symbols: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☯️','🕎','⭐','🌈','💫','⚡','🔯','🍉','🐸'],
+  regular: ['🎉','🎊','🎈','🎁','🎂','🎀','🎗️','🌸','🌹','🌺','🌻','🌼','🌷','🍀','🌿','🌱','🌾','🍁','🍂','🍃','🌊','🔥','💧','❄️','⛄','☀️','🌤️','⛅','🌧️','⛈️','🌈','🌙','⭐','🌟','🌍','🏔️','🏝️','🦋','🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🙈','🙉','🙊','🐔','🐧','🦆','🦉','🐺','🐗','🐴','🦄','🐝','🐛','🦎','🐢','🐬','🐳','🦋','🐾','🍎','🍊','🍋','🍇','🍓','🍒','🍑','🥭','🍍','🥝','🍅','🍆','🥑','🥦','🌽','🍕','🍔','🍟','🌭','🍿','🧂','🍣','🍜','🍝','🍛','🍱','🍦','🍰','🎂','🍭','🍬','🍫','🍩','☕','🧋','🥤','🍺','🥂','🏠','🚗','✈️','🚀','⚽','🏀','🎸','📱','💻','📷','🎭','🎨','📚'],
+};
+
+let emojiOpen = false;
+
+function buildEmojiGrids() {
+  for (const [tab, emojis] of Object.entries(EMOJI_DATA)) {
+    const grid = document.getElementById('tab-' + tab);
+    if (!grid) continue;
+    emojis.forEach(em => {
+      const btn = document.createElement('div');
+      btn.className = 'ep';
+      btn.textContent = em;
+      btn.onclick = () => insertEmoji(em);
+      grid.appendChild(btn);
+    });
+  }
+}
+
+function toggleEmoji() {
+  emojiOpen = !emojiOpen;
+  document.getElementById('emoji-panel').classList.toggle('visible', emojiOpen);
+  document.getElementById('emoji-toggle').classList.toggle('open', emojiOpen);
+  if (emojiOpen) document.getElementById('chat-input').focus();
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.etab').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.emoji-grid').forEach(el => el.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+function insertEmoji(em) {
+  const input = document.getElementById('chat-input');
+  const pos = input.selectionStart ?? input.value.length;
+  input.value = input.value.slice(0, pos) + em + input.value.slice(pos);
+  input.selectionStart = input.selectionEnd = pos + [...em].length;
+  if (emojiOpen) {
+    emojiOpen = false;
+    document.getElementById('emoji-panel').classList.remove('visible');
+    document.getElementById('emoji-toggle').classList.remove('open');
+  }
+  input.focus();
+}
+
+buildEmojiGrids();
+
+// Start at login screen
+show('login');
+</script>
+</body>
+</html>
